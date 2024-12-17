@@ -10,16 +10,25 @@ export async function GET() {
         const files = await fs.readdir(MUSIC_DIR);
         const tracks = await Promise.all(
             files
-                .filter((file) => file.endsWith('.mp3'))
+                .filter(
+                    (file) =>
+                        file.endsWith('.mp3') ||
+                        file.endsWith('.flac') ||
+                        file.endsWith('.opus') ||
+                        file.endsWith('.wav')
+                )
                 .map(async (file) => {
+                    const fileWithoutExtension = path.basename(
+                        file,
+                        path.extname(file)
+                    );
                     const filePath = path.join(MUSIC_DIR, file);
                     try {
                         const metadata = await parseFile(filePath);
                         return {
                             id: file,
                             title:
-                                metadata.common.title ||
-                                file.replace('.mp3', ''),
+                                metadata.common.title || fileWithoutExtension,
                             artist: metadata.common.artist || 'Unknown Artist',
                             album: metadata.common.album || 'Unknown Album',
                             duration: Math.floor(metadata.format.duration),
@@ -32,7 +41,7 @@ export async function GET() {
                         );
                         return {
                             id: file,
-                            title: file.replace('.mp3', ''),
+                            title: fileWithoutExtension,
                             artist: 'Unknown Artist',
                             album: 'Unknown Album',
                             duration: 0,
